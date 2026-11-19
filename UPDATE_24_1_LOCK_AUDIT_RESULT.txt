@@ -1,0 +1,24 @@
+PASS | create_ride_secure: function exists
+PASS | create_ride_secure: if both rows are locked, profiles comes first
+PASS | accept_ride_secure: function exists
+PASS | accept_ride_secure: if both rows are locked, profiles comes first
+PASS | update_driver_location_secure: function exists
+PASS | update_driver_location_secure: if both rows are locked, profiles comes first
+PASS | admin_set_driver_verification_secure: function exists
+PASS | admin_set_driver_verification_secure: if both rows are locked, profiles comes first
+PASS | set_ride_status_secure: function exists
+PASS | set_ride_status_secure: no profile lock after ride lock
+PASS | cancel_searching_ride_secure: function exists
+PASS | cancel_searching_ride_secure: no profile lock after ride lock
+PASS | rate_completed_ride_secure: function exists
+PASS | rate_completed_ride_secure: no profile lock after ride lock
+PASS | get_ride_contact_phone_secure: function exists
+PASS | get_ride_contact_phone_secure: no profile lock after ride lock
+PASS | rider one-active includes searching
+PASS | driver one-active excludes searching
+PASS | admin verification function does not mutate rides
+PASS | driver status progression is guarded
+PASS | searching cancellation requires rider and no driver
+PASS | driver cannot go offline during active ride
+PASS | admin cannot unverify driver during active ride
+RESULT: 23/23 checks passed

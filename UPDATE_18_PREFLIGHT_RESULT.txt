@@ -1,0 +1,88 @@
+PASS | pubspec exists and declares package
+PASS | Android manifest parses
+PASS | Internet permission exists
+PASS | applicationId preserved
+PASS | namespace preserved
+PASS | ride state completed
+PASS | ride state in_progress
+PASS | ride state arrived
+PASS | ride state searching
+PASS | ride state cancelled
+PASS | ride state accepted
+PASS | legacy ongoing status absent
+PASS | migration contains create_ride_secure
+PASS | migration contains accept_ride_secure
+PASS | migration contains set_ride_status_secure
+PASS | migration contains cancel_searching_ride_secure
+PASS | migration contains update_driver_location_secure
+PASS | migration contains set_driver_online_secure
+PASS | migration contains rate_completed_ride_secure
+PASS | migration contains get_ride_contact_phone_secure
+PASS | migration contains admin_list_pending_drivers_secure
+PASS | migration contains admin_set_driver_verification_secure
+PASS | migration contains list_available_rides_secure
+PASS | migration contains list_my_rides_secure
+PASS | migration contains admin_list_rides_secure
+PASS | migration is transactional
+PASS | phone column explicitly revoked
+PASS | phone RPC locks ride
+PASS | migration blocks unexpected RPC overloads
+PASS | migration verifies RLS in postflight
+PASS | notification migration is transactional
+PASS | notification table has owner-scoped RLS
+PASS | notification clients can only update read_at
+PASS | busy drivers excluded from new-request notifications
+PASS | notification trigger does not grant direct execution
+PASS | core security postflight audit exists
+PASS | core security postflight guards: RPC is not SECURITY DEFINER
+PASS | core security postflight guards: unsafe function config
+PASS | core security postflight guards: incorrect client EXECUTE grants
+PASS | core security postflight guards: authenticated has direct rides DML privileges
+PASS | core security postflight guards: authenticated can read profiles.phone
+PASS | core security postflight guards: active-ride unique indexes are missing
+PASS | core security postflight guards: validated six-state ride constraint is missing
+PASS | notification postflight audit exists
+PASS | notification postflight guards: RLS is disabled
+PASS | notification postflight guards: unexpected policy inventory
+PASS | notification postflight guards: column update grants are incorrect
+PASS | notification postflight guards: trigger function must be SECURITY DEFINER
+PASS | notification postflight guards: search_path/row_security config is unsafe
+PASS | notification postflight guards: directly executable by clients
+PASS | notification postflight guards: expected enabled rides notification trigger is missing
+PASS | create ride locks profile before insert and relies on unique active-ride index
+PASS | accept_ride_secure locks profile before ride
+PASS | update_driver_location_secure locks profile before ride
+PASS | admin RPCs expose no ride cancellation function
+PASS | admin verification RPC does not update rides
+PASS | no direct rides INSERT/UPDATE/DELETE from Flutter
+PASS | no direct phone-column read from Flutter
+PASS | forbidden business field absent: wallet
+PASS | forbidden business field absent: commission
+PASS | forbidden business field absent: fare_amount
+PASS | forbidden business field absent: price_per_km
+PASS | relative Dart imports resolve
+PASS | auth screen distinguishes new and existing accounts
+PASS | existing-account OTP omits signup metadata
+PASS | existing-account OTP cannot silently create a new user
+PASS | new-account profile fields are conditionally required
+PASS | safe error mapper wired: auth_gate_screen.dart/auth
+PASS | no raw exception interpolation: auth_gate_screen.dart/auth
+PASS | safe error mapper wired: admin_dashboard.dart/screens
+PASS | no raw exception interpolation: admin_dashboard.dart/screens
+PASS | safe error mapper wired: ride_tracking_screen.dart/screens
+PASS | no raw exception interpolation: ride_tracking_screen.dart/screens
+PASS | safe error mapper wired: rider_home_screen.dart/screens
+PASS | no raw exception interpolation: rider_home_screen.dart/screens
+PASS | safe error mapper wired: driver_home_screen.dart/screens
+PASS | no raw exception interpolation: driver_home_screen.dart/screens
+RESULT: 77/77 checks passed
+Spreadsheet runtime warmup failed during python startup
+Traceback (most recent call last):
+  File "/tmp/tmp.QlpUkOUI9D/artifact_tool_v2-2.8.66/artifact_tool/patches/warm_spreadsheet_runtime_on_startup.py", line 26, in warm_spreadsheet_runtime_on_startup
+  File "/tmp/tmp.QlpUkOUI9D/artifact_tool_v2-2.8.66/artifact_tool/spreadsheet_warmup.py", line 785, in warm_spreadsheet_runtime
+  File "/tmp/tmp.QlpUkOUI9D/artifact_tool_v2-2.8.66/artifact_tool/spreadsheet_warmup.py", line 718, in _warm_feature_flows
+  File "/tmp/tmp.QlpUkOUI9D/artifact_tool_v2-2.8.66/artifact_tool/spreadsheet_warmup.py", line 509, in _warm_drawing_and_image_flows
+  File "/tmp/tmp.QlpUkOUI9D/artifact_tool_v2-2.8.66/artifact_tool/generated/interface/models.py", line 32861, in bring_to_front
+  File "/tmp/tmp.QlpUkOUI9D/artifact_tool_v2-2.8.66/artifact_tool/rpc/remote.py", line 764, in __call__
+  File "/tmp/tmp.QlpUkOUI9D/artifact_tool_v2-2.8.66/artifact_tool/rpc/client.py", line 175, in call
+artifact_tool.rpc.client.RemoteError: Element ordering requires an owning element collection.

@@ -1,0 +1,19 @@
+PASS | Android namespace preserved
+PASS | Android applicationId preserved
+PASS | Gradle Android plugin pinned
+PASS | Kotlin plugin pinned
+PASS | Gradle distribution compatible
+PASS | AAB version metadata is Flutter-build overridable
+PASS | Arabic launcher label present
+PASS | Signing template has required keys
+PASS | Build script exists
+PASS | Windows build script exists
+BLOCK | Flutter wrapper script present
+BLOCK | Gradle wrapper JAR present
+BLOCK | Windows Gradle wrapper present
+BLOCK | Local signing config present
+BLOCK | Flutter SDK available in PATH
+BLOCK | JDK 17 available in PATH | openjdk version "21.0.12.1" 2026-08-18
+
+RESULT: 10/16 PASS; 6 BLOCK
+NOTE: PASS here means static prerequisite check only; it is not a Flutter build or Google Play validation.

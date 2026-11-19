@@ -1,0 +1,303 @@
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../services/trip_service.dart';
+import 'ride_tracking_screen.dart';
+
+class PassengerHome extends StatefulWidget {
+  const PassengerHome({super.key});
+
+  @override
+  State<PassengerHome> createState() => _PassengerHomeState();
+}
+
+class _PassengerHomeState extends State<PassengerHome> {
+  final _service = TripService();
+  final _pickup = TextEditingController(text: 'موقعي الحالي - ورقلة');
+  final _dropoff = TextEditingController();
+  final _dropLat = TextEditingController();
+  final _dropLng = TextEditingController();
+  Position? _position;
+  bool _loading = false;
+  bool _resumingRide = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocation();
+    _resumeActiveRide();
+  }
+
+  Future<void> _resumeActiveRide() async {
+    if (_resumingRide) return;
+    _resumingRide = true;
+    try {
+      final ride = await _service.getActiveRiderRide();
+      if (!mounted || ride == null) return;
+      final rideId = ride['id']?.toString();
+      if (rideId == null || rideId.isEmpty) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(rideId: rideId),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر استعادة الرحلة السابقة: $e')),
+        );
+      }
+    } finally {
+      _resumingRide = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _pickup.dispose();
+    _dropoff.dispose();
+    _dropLat.dispose();
+    _dropLng.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLocation() async {
+    try {
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) throw Exception('فعّل خدمة الموقع في الهاتف');
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('لم يتم منح إذن الموقع');
+      }
+      final position = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
+      setState(() {
+        _position = position;
+        _pickup.text = 'موقعي الحالي';
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر تحديد الموقع: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickDestination() async {
+    final current = _position;
+    final initial = current == null
+        ? const LatLng(31.9522, 5.3242)
+        : LatLng(current.latitude, current.longitude);
+    final selected = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DestinationPickerScreen(initialPosition: initial),
+      ),
+    );
+    if (!mounted || selected == null) return;
+    setState(() {
+      _dropLat.text = selected.latitude.toStringAsFixed(6);
+      _dropLng.text = selected.longitude.toStringAsFixed(6);
+      if (_dropoff.text.trim().isEmpty) {
+        _dropoff.text = 'وجهة محددة على الخريطة';
+      }
+    });
+  }
+
+  Future<void> _requestRide() async {
+    final pos = _position;
+    final lat = double.tryParse(_dropLat.text.trim());
+    final lng = double.tryParse(_dropLng.text.trim());
+    if (pos == null || lat == null || lng == null ||
+        _dropoff.text.trim().length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('حدد موقعك والوجهة وإحداثياتها بشكل صحيح')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+    try {
+      final ride = await _service.requestTaxi(
+        pickupAddress: _pickup.text,
+        pickupLat: pos.latitude,
+        pickupLng: pos.longitude,
+        dropoffAddress: _dropoff.text,
+        dropoffLat: lat,
+        dropoffLng: lng,
+      );
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(rideId: ride['id'].toString()),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر إرسال الطلب: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('طاكسي ورڨلة لايت')),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Text(
+              'اطلب رحلة داخل ورقلة',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text('يتم الاتفاق على الأجرة مباشرة بين الراكب والسائق خارج التطبيق.'),
+            if (_resumingRide) ...[
+              const SizedBox(height: 12),
+              const LinearProgressIndicator(),
+              const SizedBox(height: 6),
+              const Text('نتحقق من وجود رحلة سابقة…', textAlign: TextAlign.center),
+            ],
+            const SizedBox(height: 20),
+            TextField(
+              controller: _pickup,
+              readOnly: true,
+              decoration: const InputDecoration(
+                labelText: 'مكان الانطلاق',
+                prefixIcon: Icon(Icons.my_location),
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _loading ? null : _loadLocation,
+              icon: const Icon(Icons.gps_fixed),
+              label: const Text('تحديث موقعي'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _dropoff,
+              decoration: const InputDecoration(
+                labelText: 'عنوان الوجهة',
+                prefixIcon: Icon(Icons.location_on),
+              ),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _loading ? null : _pickDestination,
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('اختيار الوجهة على الخريطة'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _dropLat,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              decoration: const InputDecoration(labelText: 'خط عرض الوجهة (Latitude)'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _dropLng,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              decoration: const InputDecoration(labelText: 'خط طول الوجهة (Longitude)'),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _loading || _resumingRide ? null : _requestRide,
+              child: _loading
+                  ? const CircularProgressIndicator()
+                  : const Text('إرسال طلب الطاكسي'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class DestinationPickerScreen extends StatefulWidget {
+  const DestinationPickerScreen({super.key, required this.initialPosition});
+  final LatLng initialPosition;
+
+  @override
+  State<DestinationPickerScreen> createState() => _DestinationPickerScreenState();
+}
+
+class _DestinationPickerScreenState extends State<DestinationPickerScreen> {
+  LatLng? _selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('حدد موقع الوجهة')),
+        body: Stack(
+          children: [
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: widget.initialPosition,
+                zoom: 14,
+              ),
+              onTap: (point) => setState(() => _selected = point),
+              markers: {
+                if (_selected != null)
+                  Marker(
+                    markerId: const MarkerId('selected_destination'),
+                    position: _selected!,
+                    infoWindow: const InfoWindow(title: 'الوجهة المختارة'),
+                  ),
+              },
+              myLocationButtonEnabled: true,
+              myLocationEnabled: false,
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 20,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _selected == null
+                            ? 'اضغط على الخريطة لتحديد الوجهة'
+                            : 'الإحداثيات: ${_selected!.latitude.toStringAsFixed(5)}, ${_selected!.longitude.toStringAsFixed(5)}',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: _selected == null
+                              ? null
+                              : () => Navigator.pop(context, _selected),
+                          child: const Text('تأكيد الوجهة'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
