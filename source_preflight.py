@@ -95,6 +95,10 @@ check('admin verification RPC does not update rides', 'UPDATE public.rides' not 
 all_dart = '\n'.join(p.read_text(encoding='utf-8', errors='ignore') for p in (ROOT/'lib').rglob('*.dart'))
 check('no direct rides INSERT/UPDATE/DELETE from Flutter', not re.search(r"\.from\(['\"]rides['\"]\)\s*\.\s*(insert|update|delete|upsert)\s*\(", all_dart, re.I))
 check('no direct phone-column read from Flutter', not re.search(r"\.from\(['\"]profiles['\"]\).*?\.select\(['\"][^'\"]*\bphone\b", all_dart, re.I|re.S))
+tracking_screen = (ROOT/'lib/screens/ride_tracking_screen.dart').read_text(encoding='utf-8')
+ride_data_source = (ROOT/'lib/repositories/ride_data_source.dart').read_text(encoding='utf-8')
+check('ride tracking screen uses canonical RideRepository stream', 'rideRepository.watchRide(widget.rideId)' in tracking_screen and 'TripService' not in tracking_screen)
+check('ride datasource exposes participant-scoped ride lookup', 'watchRideRows(String rideId)' in ride_data_source and "_poll('list_my_rides_secure')" in ride_data_source)
 for forbidden in ['wallet','commission','fare_amount','price_per_km']:
     check('forbidden business field absent: '+forbidden, forbidden not in all_dart.lower())
 

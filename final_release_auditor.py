@@ -130,7 +130,7 @@ class Auditor:
             return
         try:
             with zipfile.ZipFile(self.aab) as zf:
-                flutter_libs = [n for n in zf.namelist() if re.fullmatch(r"base/lib/[^/]+/libflutter\\.so", n)]
+                flutter_libs = [n for n in zf.namelist() if re.fullmatch(r"base/lib/[^/]+/libflutter\.so", n)]
                 self.record("Flutter engine library libflutter.so", bool(flutter_libs),
                             ", ".join(flutter_libs) if flutter_libs else "لم يُعثر على libflutter.so داخل base/lib/<abi>/")
         except (zipfile.BadZipFile, OSError) as exc:
